@@ -1,0 +1,8 @@
+[package]
+name = "text_game"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lauren Parker <lparker@g.hmc.edu>", "April Uzdavinis <auzdavinis@g.hmc.edu>"]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
