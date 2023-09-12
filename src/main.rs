@@ -6,6 +6,7 @@ use std::pin::pin;
 use std::time::Duration;
 
 mod command;
+mod layer;
 mod game_state;
 
 use game_state::GameState;
@@ -107,8 +108,11 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
+    // Should we pass in the gamestate to draw tower so that we can 
+    // access a scroll position variable to determine which tower
+    // levels are viewable?
+    gs.draw_tower()?;
     gs.draw_command_pool()?;
-
     if gs.command_pool_array.id() == gs.command_pool_a_id {
         gs.command_pool_array.set_id(gs.command_pool_b_id);
     } else {

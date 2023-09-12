@@ -1,4 +1,6 @@
 use crate::command::*;
+use crate::layer::*;
+
 use std::io;
 
 pub struct GameState {
@@ -8,6 +10,9 @@ pub struct GameState {
 
     pub command_pool_a_id: CommandPoolId,
     pub command_pool_b_id: CommandPoolId,
+
+    pub layers: Vec<Layer>,
+
 }
 
 impl GameState {
@@ -18,6 +23,10 @@ impl GameState {
     pub fn draw_command_pool(&mut self) -> io::Result<()> {
         let pool = self.command_pool_array.cur();
         pool.draw(&mut self.stdout)
+    }
+
+    pub fn draw_tower(&mut self) -> io::Result<()> {
+        layer_draw(&self.layers, &mut self.stdout)
     }
 }
 
@@ -57,6 +66,10 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
             .on_letter_press('x', "hoh...", noop_command)
             .build(),
     );
+    let mut testLayer : Layer = Layer{style:LayerType::Apartment, occupancy:0, revenue:0, text:"".to_string()};
+    testLayer.set_string();
+
+    let layers: Vec<Layer> = vec![testLayer];
 
     GameState {
         running: true,
@@ -64,5 +77,6 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
         command_pool_array: pool_array_builder.with_initial_pool(command_pool_a_id),
         command_pool_a_id,
         command_pool_b_id,
+        layers,
     }
 }
