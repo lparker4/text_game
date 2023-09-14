@@ -6,8 +6,8 @@ use std::pin::pin;
 use std::time::Duration;
 
 mod command;
-mod layer;
 mod game_state;
+mod layer;
 
 use game_state::GameState;
 
@@ -16,7 +16,6 @@ pub const WINDOW_HEIGHT: u16 = 30;
 
 pub const CONTROLS_HEIGHT: u16 = 11;
 
-
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> io::Result<()> {
     // Calling supports_ansi() on Windows may actually *cause* the terminal
@@ -24,9 +23,9 @@ async fn main() -> io::Result<()> {
     #[cfg(windows)]
     if !crossterm::ansi_support::supports_ansi() {
         println!("Your terminal does not support ansi escape codes!");
-        return Ok(())
+        return Ok(());
     }
-    
+
     let mut stdout = io::stdout().lock();
     let (original_w, original_h) = terminal::size()?;
     terminal::enable_raw_mode()?;
@@ -108,16 +107,13 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
-    // Should we pass in the gamestate to draw tower so that we can 
+    // Should we pass in the gamestate to draw tower so that we can
     // access a scroll position variable to determine which tower
     // levels are viewable?
     gs.draw_tower()?;
     gs.draw_command_pool()?;
-    if gs.command_pool_array.id() == gs.command_pool_a_id {
-        gs.command_pool_array.set_id(gs.command_pool_b_id);
-    } else {
-        gs.command_pool_array.set_id(gs.command_pool_a_id);
-    }
+
+    gs.scroll_pos = (gs.scroll_pos + 1) % 15;
 
     Ok(())
 }

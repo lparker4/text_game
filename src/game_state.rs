@@ -12,7 +12,7 @@ pub struct GameState {
     pub command_pool_b_id: CommandPoolId,
 
     pub layers: Vec<Layer>,
-
+    pub scroll_pos: u16,
 }
 
 impl GameState {
@@ -26,7 +26,7 @@ impl GameState {
     }
 
     pub fn draw_tower(&mut self) -> io::Result<()> {
-        layer_draw(&self.layers, &mut self.stdout)
+        layer_draw(&self.layers, &mut self.stdout, self.scroll_pos)
     }
 }
 
@@ -66,10 +66,23 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
             .on_letter_press('x', "hoh...", noop_command)
             .build(),
     );
-    let mut testLayer : Layer = Layer{style:LayerType::Apartment, occupancy:0, revenue:0, text:"".to_string()};
-    testLayer.set_string();
+    let mut test_layer_1: Layer = Layer {
+        style: LayerType::Apartment,
+        occupancy: 0,
+        revenue: 0,
+        text: "".to_string(),
+    };
+    let mut test_layer_2: Layer = Layer {
+        style: LayerType::Food,
+        occupancy: 24,
+        revenue: 300,
+        text: "".to_string(),
+    };
 
-    let layers: Vec<Layer> = vec![testLayer];
+    test_layer_1.set_string();
+    test_layer_2.set_string();
+
+    let layers: Vec<Layer> = vec![test_layer_1, test_layer_2];
 
     GameState {
         running: true,
@@ -78,5 +91,6 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
         command_pool_a_id,
         command_pool_b_id,
         layers,
+        scroll_pos: 0,
     }
 }
