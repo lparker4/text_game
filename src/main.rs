@@ -112,6 +112,9 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
+
+    gs.update_occupancies();
+    gs.draw_tower()?;
     if gs.debt_collection_timer != 0{
         gs.debt_collection_timer -= 1;
     }
@@ -121,6 +124,7 @@ fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
         revenue += layer.revenue() as i32;
     }
     gs.draw_funds(0,revenue);
+
 
 
     Ok(())
