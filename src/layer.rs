@@ -6,20 +6,28 @@ use std::io::{self, Write};
 
 pub struct Layer {
     pub style: LayerType,
-    pub revenue: usize,
+    pub revenue_per_occupant: usize,
     pub occupancy: usize,
+    pub max_occupancy: usize,
     pub text: String,
     //pub start_row: Option<usize>
 }
+
 impl Layer {
-    pub fn new(style: LayerType, revenue: usize, occupancy: usize) -> Self {
+    pub fn new(style: LayerType, revenue_per_occupant: usize, max_occupancy: usize) -> Self {
         Self {
-            style: style,
-            revenue: revenue,
-            occupancy: occupancy,
+            style,
+            revenue_per_occupant,
+            occupancy: 0,
+            max_occupancy,
             text: "".to_string(),
         }
     }
+
+    pub fn revenue(&self) -> usize {
+        self.occupancy * self.revenue_per_occupant
+    }
+
     pub fn set_string(&mut self) {
         const TOWER_WIDTH: usize = 24;
         let name = match self.style {
@@ -30,7 +38,7 @@ impl Layer {
 
         let name = format!(
             "|{name:^TOWER_WIDTH$}|\n|{:TOWER_WIDTH$}|\n", "");
-        let revenue: String = format!("|       REVENUE: {:<4}    |\n", self.revenue);
+        let revenue: String = format!("|       REVENUE: {:<4}    |\n", self.revenue());
         let occupancy: String = format!("|      OCCUPANCY: {:<4}   |\n", self.occupancy);
         self.text = name + &revenue + &occupancy;
     }

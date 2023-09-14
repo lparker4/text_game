@@ -13,6 +13,9 @@ pub struct GameState {
 
     pub layers: Vec<Layer>,
     pub scroll_pos: u16,
+
+    pub funds: i32,
+    pub debt_collection_timer: u32,
 }
 
 impl GameState {
@@ -87,23 +90,15 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
             .build()
     );
 
-    let mut test_layer_1: Layer = Layer {
-        style: LayerType::Apartment,
-        occupancy: 0,
-        revenue: 0,
-        text: "".to_string(),
-    };
-    let mut test_layer_2: Layer = Layer {
-        style: LayerType::Food,
-        occupancy: 24,
-        revenue: 300,
-        text: "".to_string(),
-    };
+    let mut bottom_layer: Layer = Layer::new(
+        LayerType::Apartment,
+        0,
+        0,
+    );
 
-    test_layer_1.set_string();
-    test_layer_2.set_string();
+    bottom_layer.set_string();
 
-    let layers: Vec<Layer> = vec![test_layer_1, test_layer_2];
+    let layers: Vec<Layer> = vec![bottom_layer];
 
     GameState {
         running: true,
@@ -113,5 +108,7 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
         command_pool_build_id,
         layers,
         scroll_pos: 0,
+        funds: 10_000,
+        debt_collection_timer: 0,
     }
 }
