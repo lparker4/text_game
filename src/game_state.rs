@@ -32,6 +32,31 @@ impl GameState {
         layer_draw(&self.layers, &mut self.stdout, self.scroll_pos)
     }
 
+    pub fn draw_funds(&mut self, charges: i32, debits: i32) -> io::Result<()> {
+        let mut msg: String = "".to_string();
+        if charges > 0 {
+            if debits > 0{
+                msg = format!("You were charged ${}, and made ${}", charges, debits);
+            }
+            msg = format!("You were charged ${}", charges);
+        }else if debits > 0 {
+            msg = format!("You made ${}", debits);
+        }
+        if self.debt_collection_timer <= 1{
+            if self.funds >= 0{
+                msg = "YOU PASSED THE DEBT COLLECTOR'S INSPECTION!".to_string();
+                self.debt_collection_timer = 50;
+            } else {
+                msg = "YOU DID NOT HAVE FUNDS TO PAY THE DEBT COLLECTOR. GAME OVER.".to_string();
+                // Make new command pool with restart and exit
+                // restart takes you back to new gamestate init call basically
+            }
+        }
+        self.funds += debits;
+        self.funds -= charges;
+        funds_draw(&mut self.stdout, self.funds, self.debt_collection_timer, &msg)
+    }
+
     pub fn enter_menu(&mut self, command_pool_id: CommandPoolId) -> io::Result<()> {
         self.command_pool_array.set_id(command_pool_id);
         self.draw_command_pool()
@@ -69,19 +94,22 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
 
     let command_pool_build_id = pool_array_builder.add_pool(
         CommandPoolBuilder::new()
-            .on_letter_press('f', "Food court", Command::new(|gs| {
+            .on_letter_press('f', "Food court- $10000", Command::new(|gs| {
                 gs.add_layer(LayerType::Food);
                 gs.draw_tower()?;
+                gs.draw_funds(10000, 0)?;
                 gs.enter_menu(gs.command_pool_main_id)
             }))
-            .on_letter_press('a', "Apartments", Command::new(|gs| {
+            .on_letter_press('a', "Apartments- $12000", Command::new(|gs| {
                 gs.add_layer(LayerType::Apartment);
                 gs.draw_tower()?;
+                gs.draw_funds(12000, 0)?;
                 gs.enter_menu(gs.command_pool_main_id)
             }))
-            .on_letter_press('r', "Retail", Command::new(|gs| {
+            .on_letter_press('r', "Retail- $8000", Command::new(|gs| {
                 gs.add_layer(LayerType::Retail);
                 gs.draw_tower()?;
+                gs.draw_funds(8000, 0)?;
                 gs.enter_menu(gs.command_pool_main_id)
             }))
             .on_letter_press('x', "Cancel", Command::new(|gs| {
@@ -109,6 +137,6 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
         layers,
         scroll_pos: 0,
         funds: 10_000,
-        debt_collection_timer: 0,
+        debt_collection_timer: 50,
     }
 }

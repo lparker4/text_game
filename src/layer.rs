@@ -1,4 +1,4 @@
-use crate::{CONTROLS_HEIGHT, WINDOW_HEIGHT, WINDOW_WIDTH};
+use crate::{CONTROLS_HEIGHT, TOWER_WINDOW_HEIGHT, WINDOW_HEIGHT, WINDOW_WIDTH};
 use crossterm::style::{self, Color, Colors};
 use crossterm::{cursor, queue, terminal};
 use std::fs;
@@ -105,8 +105,7 @@ impl LayerText {
 }
 
 pub fn layer_draw(layers: &Vec<Layer>, mut writer: impl Write, scroll_pos: u16) -> io::Result<()> {
-    // Determine where to get this number from elsewhere
-    const TOWER_WINDOW_HEIGHT: u16 = WINDOW_HEIGHT - CONTROLS_HEIGHT;
+    
 
     // Set up vector of LayerText objects
     let mut layer_strings = vec![];
@@ -178,4 +177,45 @@ pub fn layer_draw(layers: &Vec<Layer>, mut writer: impl Write, scroll_pos: u16) 
     }
 
     Ok(())
+}
+
+pub fn funds_draw(mut writer: impl Write, funds: i32, debt_timer: u32, msg:&str) -> io::Result<()> {
+    const MESSAGE_HEIGHT:u16 = TOWER_WINDOW_HEIGHT + 1;
+    const INFO_MSG_WIDTH:u16 = 35;
+    // Print message regarding debt collection, purchase, or other above the controls menu
+    queue!(
+        writer,
+        cursor::MoveTo(0, TOWER_WINDOW_HEIGHT + MESSAGE_HEIGHT),
+        style::SetColors(Colors {
+            foreground: Some(Color::White),
+            background: Some(Color::Black),
+        }),
+        style::Print(msg),
+    )?;
+
+    // Print current funds and time until debt collector on the right of the tower
+    let fund_string : &str = &(format!("CURRENT FUNDS: {}", funds));
+    queue!(
+        writer,
+        cursor::MoveTo(INFO_MSG_WIDTH,0),
+        style::SetColors(Colors {
+            foreground: Some(Color::Green),
+            background: Some(Color::Black),
+        }),
+        style::Print(fund_string),
+    )?;
+    let debt_string : &str = &(format!("TIME UNTIL DEBT COLLECTOR COMES: {}", debt_timer));
+    queue!(
+        writer,
+        cursor::MoveTo(INFO_MSG_WIDTH,1),
+        style::SetColors(Colors {
+            foreground: Some(Color::Red),
+            background: Some(Color::Black),
+        }),
+        style::Print(debt_string),
+    )?;
+
+
+    Ok(())
+
 }
