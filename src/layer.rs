@@ -179,12 +179,12 @@ pub fn layer_draw(layers: &Vec<Layer>, mut writer: impl Write, scroll_pos: u16) 
 }
 
 pub fn funds_draw(mut writer: impl Write, funds: i32, debt_timer: u32, msg:&str) -> io::Result<()> {
-    const MESSAGE_HEIGHT:u16 = TOWER_WINDOW_HEIGHT + 1;
+    // const MESSAGE_HEIGHT:u16 = T - 1;
     const INFO_MSG_WIDTH:u16 = 35;
     // Print message regarding debt collection, purchase, or other above the controls menu
     queue!(
         writer,
-        cursor::MoveTo(0, TOWER_WINDOW_HEIGHT + MESSAGE_HEIGHT),
+        cursor::MoveTo(INFO_MSG_WIDTH, TOWER_WINDOW_HEIGHT),
         style::SetColors(Colors {
             foreground: Some(Color::White),
             background: Some(Color::Black),
