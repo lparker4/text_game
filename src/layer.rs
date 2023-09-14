@@ -1,13 +1,8 @@
-use crate::{GameState, CONTROLS_HEIGHT, WINDOW_HEIGHT, WINDOW_WIDTH};
-use crossterm::style::{self, style, Print, SetColors, Stylize};
+use crate::{CONTROLS_HEIGHT, WINDOW_HEIGHT, WINDOW_WIDTH};
+use crossterm::style::{self, Color, Colors};
 use crossterm::{cursor, queue, terminal};
-
-use core::num;
-use crossterm::style::{Color, Colors};
 use std::fs;
-
 use std::io::{self, Write};
-use std::thread::scope;
 
 pub struct Layer {
     pub style: LayerType,
@@ -26,26 +21,18 @@ impl Layer {
         }
     }
     pub fn set_string(&mut self) {
-        const TOWER_WIDTH: u32 = 24;
-        let mut name: String = "".to_string();
-        match self.style {
-            LayerType::Apartment => {
-                name += "|   APARTMENT COMPLEX    |\n|                        |\n";
-            }
-            LayerType::Retail => {
-                name += "|      RETAIL STORE      |\n|                        |\n";
-            }
-            LayerType::Food => {
-                name += "|       FOOD COURT       |\n|                        |\n";
-            }
-        }
+        const TOWER_WIDTH: usize = 24;
+        let name = match self.style {
+            LayerType::Apartment => "APARTMENT COMPLEX",
+            LayerType::Retail => "RETAIL STORE",
+            LayerType::Food => "FOOD COURT",
+        };
+
+        let name = format!(
+            "|{name:^TOWER_WIDTH$}|\n|{:TOWER_WIDTH$}|\n", "");
         let revenue: String = format!("|       REVENUE: {:<4}    |\n", self.revenue);
         let occupancy: String = format!("|      OCCUPANCY: {:<4}   |\n", self.occupancy);
-        let mut text: String = "".to_string();
-        text += &name;
-        text += &revenue;
-        text += &occupancy;
-        self.text = text;
+        self.text = name + &revenue + &occupancy;
     }
 }
 
@@ -111,7 +98,7 @@ impl LayerText {
 
 pub fn layer_draw(layers: &Vec<Layer>, mut writer: impl Write, scroll_pos: u16) -> io::Result<()> {
     // Determine where to get this number from elsewhere
-    const TOWER_WINDOW_HEIGHT: u16 = 15;
+    const TOWER_WINDOW_HEIGHT: u16 = WINDOW_HEIGHT - CONTROLS_HEIGHT;
 
     // Set up vector of LayerText objects
     let mut layer_strings = vec![];

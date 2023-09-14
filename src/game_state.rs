@@ -8,8 +8,8 @@ pub struct GameState {
     pub running: bool,
     pub command_pool_array: CommandPoolArray,
 
-    pub command_pool_a_id: CommandPoolId,
-    pub command_pool_b_id: CommandPoolId,
+    pub command_pool_main_id: CommandPoolId,
+    pub command_pool_build_id: CommandPoolId,
 
     pub layers: Vec<Layer>,
     pub scroll_pos: u16,
@@ -28,6 +28,17 @@ impl GameState {
     pub fn draw_tower(&mut self) -> io::Result<()> {
         layer_draw(&self.layers, &mut self.stdout, self.scroll_pos)
     }
+
+    pub fn enter_menu(&mut self, command_pool_id: CommandPoolId) -> io::Result<()> {
+        self.command_pool_array.set_id(command_pool_id);
+        self.draw_command_pool()
+    }
+
+    pub fn add_layer(&mut self, style: LayerType) {
+        let mut new_layer = Layer::new(style, 0, 0);
+        new_layer.set_string();
+        self.layers.push(new_layer);
+    }
 }
 
 fn noop(_gs: &mut GameState) -> io::Result<()> {
@@ -35,37 +46,47 @@ fn noop(_gs: &mut GameState) -> io::Result<()> {
 }
 
 pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
-    let noop_command = Command::new(noop);
-
     let mut pool_array_builder = CommandPoolArrayBuilder::new();
 
-    let command_pool_a_id = pool_array_builder.add_pool(
+    let command_pool_main_id = pool_array_builder.add_pool(
         CommandPoolBuilder::new()
-            .on_letter_press('w', "loop up", noop_command)
-            .on_letter_press('a', "loop left", noop_command)
-            .on_letter_press('s', "look down", noop_command)
-            .on_letter_press('d', "foo right", noop_command)
-            .on_letter_press('z', "foo", noop_command)
-            .on_letter_press('x', "bar", noop_command)
-            .on_letter_press('c', "baz", noop_command)
-            .on_letter_press('v', "qux", noop_command)
-            .on_letter_press('u', "ascend", noop_command)
-            .on_letter_press('h', "shift l", noop_command)
-            .on_letter_press('m', "descend", noop_command)
-            .on_letter_press('k', "shift r", noop_command)
+            .on_letter_press('w', "Scroll up", Command::new(|gs| {
+                gs.scroll_pos += 1;
+                gs.draw_tower()
+            }))
+            .on_letter_press('s', "Scroll down", Command::new(|gs| {
+                gs.scroll_pos = gs.scroll_pos.saturating_sub(1);
+                gs.draw_tower()
+            }))
+            .on_letter_press('b', "Build", Command::new(|gs| {
+                gs.enter_menu(gs.command_pool_build_id)
+            }))
             .build(),
     );
 
-    let command_pool_b_id = pool_array_builder.add_pool(
+    let command_pool_build_id = pool_array_builder.add_pool(
         CommandPoolBuilder::new()
-            .on_letter_press('w', "wah", noop_command)
-            .on_letter_press('a', "wah", noop_command)
-            .on_letter_press('s', "wee", noop_command)
-            .on_letter_press('d', "wah", noop_command)
-            .on_letter_press('z', "hoho", noop_command)
-            .on_letter_press('x', "hoh...", noop_command)
-            .build(),
+            .on_letter_press('f', "Food court", Command::new(|gs| {
+                gs.add_layer(LayerType::Food);
+                gs.draw_tower()?;
+                gs.enter_menu(gs.command_pool_main_id)
+            }))
+            .on_letter_press('a', "Apartments", Command::new(|gs| {
+                gs.add_layer(LayerType::Apartment);
+                gs.draw_tower()?;
+                gs.enter_menu(gs.command_pool_main_id)
+            }))
+            .on_letter_press('r', "Retail", Command::new(|gs| {
+                gs.add_layer(LayerType::Retail);
+                gs.draw_tower()?;
+                gs.enter_menu(gs.command_pool_main_id)
+            }))
+            .on_letter_press('x', "Cancel", Command::new(|gs| {
+                gs.enter_menu(gs.command_pool_main_id)
+            }))
+            .build()
     );
+
     let mut test_layer_1: Layer = Layer {
         style: LayerType::Apartment,
         occupancy: 0,
@@ -87,9 +108,9 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
     GameState {
         running: true,
         stdout,
-        command_pool_array: pool_array_builder.with_initial_pool(command_pool_a_id),
-        command_pool_a_id,
-        command_pool_b_id,
+        command_pool_array: pool_array_builder.with_initial_pool(command_pool_main_id),
+        command_pool_main_id,
+        command_pool_build_id,
         layers,
         scroll_pos: 0,
     }

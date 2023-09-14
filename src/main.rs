@@ -44,6 +44,10 @@ async fn main() -> io::Result<()> {
 
     let mut event_stream = event::EventStream::new();
     let mut heartbeat = tokio::time::interval(Duration::from_secs(1));
+
+    gs.draw_command_pool()?;
+    gs.draw_tower()?;
+
     'main_loop: while gs.running {
         let mut event_fut = event_stream.next().fuse();
         let mut heartbeat_fut = pin!(heartbeat.tick().fuse());
@@ -107,13 +111,5 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
-    // Should we pass in the gamestate to draw tower so that we can
-    // access a scroll position variable to determine which tower
-    // levels are viewable?
-    gs.draw_tower()?;
-    gs.draw_command_pool()?;
-
-    gs.scroll_pos = (gs.scroll_pos + 1) % 15;
-
     Ok(())
 }
