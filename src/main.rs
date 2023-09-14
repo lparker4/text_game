@@ -14,6 +14,7 @@ use game_state::GameState;
 pub const WINDOW_WIDTH: u16 = 120;
 pub const WINDOW_HEIGHT: u16 = 30;
 
+const TOWER_WINDOW_HEIGHT: u16 = WINDOW_HEIGHT - CONTROLS_HEIGHT;
 pub const CONTROLS_HEIGHT: u16 = 11;
 
 #[tokio::main(flavor = "current_thread")]
@@ -111,8 +112,20 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
+
     gs.update_occupancies();
     gs.draw_tower()?;
+    if gs.debt_collection_timer != 0{
+        gs.debt_collection_timer -= 1;
+    }
+    let iterator = gs.layers.iter();
+    let mut revenue : i32 = 0;
+    for layer in iterator{
+        revenue += layer.revenue() as i32;
+    }
+    gs.draw_funds(0,revenue);
+
+
 
     Ok(())
 }
