@@ -111,5 +111,8 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
+    gs.update_occupancies();
+    gs.draw_tower()?;
+
     Ok(())
 }

@@ -36,8 +36,7 @@ impl Layer {
             LayerType::Food => "FOOD COURT",
         };
 
-        let name = format!(
-            "|{name:^TOWER_WIDTH$}|\n|{:TOWER_WIDTH$}|\n", "");
+        let name = format!("|{name:^TOWER_WIDTH$}|\n|{:TOWER_WIDTH$}|\n", "");
         let revenue: String = format!("|       REVENUE: {:<4}    |\n", self.revenue());
         let occupancy: String = format!("|      OCCUPANCY: {:<4}   |\n", self.occupancy);
         self.text = name + &revenue + &occupancy;
