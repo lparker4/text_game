@@ -50,6 +50,12 @@ async fn main() -> io::Result<()> {
     gs.draw_tower()?;
 
     'main_loop: while gs.running {
+        if gs.restarting {
+            gs = game_state::init_game_state(gs.stdout);
+            gs.draw_command_pool()?;
+            gs.draw_tower()?;
+        }
+
         let mut event_fut = event_stream.next().fuse();
         let mut heartbeat_fut = pin!(heartbeat.tick().fuse());
         futures::select! {
@@ -112,20 +118,20 @@ fn handle_key_event(gs: &mut GameState, ke: KeyEvent) -> io::Result<()> {
 }
 
 fn handle_time_tick(gs: &mut GameState) -> io::Result<()> {
+    if gs.debt_collection_timer == 0 {
+        gs.draw_funds(0, 0)?;
+        return Ok(());
+    }
 
+    gs.debt_collection_timer -= 1;
     gs.update_occupancies();
     gs.draw_tower()?;
-    if gs.debt_collection_timer != 0{
-        gs.debt_collection_timer -= 1;
-    }
-    let iterator = gs.layers.iter();
+
     let mut revenue : i32 = 0;
-    for layer in iterator{
+    for layer in &gs.layers {
         revenue += layer.revenue() as i32;
     }
-    gs.draw_funds(0,revenue);
-
-
+    gs.draw_funds(0, revenue)?;
 
     Ok(())
 }

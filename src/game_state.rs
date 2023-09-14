@@ -6,10 +6,12 @@ use std::io;
 pub struct GameState {
     pub stdout: io::StdoutLock<'static>,
     pub running: bool,
+    pub restarting: bool,
     pub command_pool_array: CommandPoolArray,
 
     pub command_pool_main_id: CommandPoolId,
     pub command_pool_build_id: CommandPoolId,
+    pub command_pool_game_over_id: CommandPoolId,
 
     pub layers: Vec<Layer>,
     pub scroll_pos: u16,
@@ -42,14 +44,13 @@ impl GameState {
         }else if debits > 0 {
             msg = format!("You made ${}", debits);
         }
-        if self.debt_collection_timer <= 1{
+        if self.debt_collection_timer == 0 {
             if self.funds >= 0{
                 msg = "YOU PASSED THE DEBT COLLECTOR'S INSPECTION!".to_string();
                 self.debt_collection_timer = 50;
             } else {
                 msg = "YOU DID NOT HAVE FUNDS TO PAY THE DEBT COLLECTOR. GAME OVER.".to_string();
-                // Make new command pool with restart and exit
-                // restart takes you back to new gamestate init call basically
+                self.enter_menu(self.command_pool_game_over_id)?;
             }
         }
         self.funds += debits;
@@ -64,9 +65,9 @@ impl GameState {
 
     pub fn add_layer(&mut self, style: LayerType) {
         let (max_occupancy, revenue_per_occupant) = match style {
-            LayerType::Apartment => (20, 37),
-            LayerType::Food => (50, 7),
-            LayerType::Retail => (15, 19),
+            LayerType::Apartment => (20, 17),
+            LayerType::Food => (30, 7),
+            LayerType::Retail => (10, 12),
         };
         let mut new_layer = Layer::new(style, revenue_per_occupant, max_occupancy);
         new_layer.set_string();
@@ -99,7 +100,8 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
                 "Scroll up",
                 Command::new(|gs| {
                     gs.scroll_pos += 1;
-                    gs.draw_tower()
+                    gs.draw_tower()?;
+                    gs.draw_funds(0, 0)
                 }),
             )
             .on_letter_press(
@@ -107,7 +109,8 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
                 "Scroll down",
                 Command::new(|gs| {
                     gs.scroll_pos = gs.scroll_pos.saturating_sub(1);
-                    gs.draw_tower()
+                    gs.draw_tower()?;
+                    gs.draw_funds(0, 0)
                 }),
             )
             .on_letter_press(
@@ -144,12 +147,27 @@ pub fn init_game_state(stdout: io::StdoutLock<'static>) -> GameState {
             .build()
     );
 
+    let command_pool_game_over_id = pool_array_builder.add_pool(
+        CommandPoolBuilder::new()
+            .on_letter_press('r', "Retry", Command::new(|gs| {
+                gs.restarting = true;
+                Ok(())
+            }))
+            .on_letter_press('x', "Exit", Command::new(|gs| {
+                gs.running = false;
+                Ok(())
+            }))
+            .build()
+    );
+
     GameState {
         running: true,
+        restarting: false,
         stdout,
         command_pool_array: pool_array_builder.with_initial_pool(command_pool_main_id),
         command_pool_main_id,
         command_pool_build_id,
+        command_pool_game_over_id,
         layers: vec![],
         scroll_pos: 0,
         funds: 10_000,

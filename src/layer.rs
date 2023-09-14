@@ -184,7 +184,7 @@ pub fn funds_draw(mut writer: impl Write, funds: i32, debt_timer: u32, msg:&str)
     // Print message regarding debt collection, purchase, or other above the controls menu
     queue!(
         writer,
-        cursor::MoveTo(INFO_MSG_WIDTH, TOWER_WINDOW_HEIGHT),
+        cursor::MoveTo(INFO_MSG_WIDTH, TOWER_WINDOW_HEIGHT - 1),
         style::SetColors(Colors {
             foreground: Some(Color::White),
             background: Some(Color::Black),
